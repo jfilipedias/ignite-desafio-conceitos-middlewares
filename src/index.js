@@ -27,11 +27,24 @@ function checksCreateTodosUserAvailability(request, response, next) {
   if (!user.pro && user.todos.length >= 10)
     return response.status(400).json({ error: 'You have no more todos availables.' });
   
-  return nxex();
+  return next();
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const { user } = request;
+  const { id } = request.params;
+  const todo = user.todos.find(todo => todo.id === id)
+  const uuidReg = '/^[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i';
+
+  if (!id.match(uuidReg))
+    return response.status(400).json({ error: 'The passed todo id is not a valid id.' });
+  
+  if (!todo)
+    return response.status(404).json({ error: 'Todo not found.' });
+
+  request.todo = todo;
+
+  return next();
 }
 
 function findUserById(request, response, next) {
