@@ -25,30 +25,44 @@ function checksCreateTodosUserAvailability(request, response, next) {
   const { user } = request;
   
   if (!user.pro && user.todos.length >= 10)
-    return response.status(400).json({ error: 'You have no more todos availables.' });
+    return response.status(403).json({ error: 'You have no more todos availables.' });
   
   return next();
 }
 
 function checksTodoExists(request, response, next) {
-  const { user } = request;
+  const { username } = request.headers;
   const { id } = request.params;
-  const todo = user.todos.find(todo => todo.id === id)
-  const uuidReg = '/^[0-9A-F]{8}-[0-9A-F]{4}-[4][0-9A-F]{3}-[89AB][0-9A-F]{3}-[0-9A-F]{12}$/i';
 
-  if (!id.match(uuidReg))
+  const user = users.find(user => user.username === username);
+
+  if (!user)
+    return response.status(404).json({ error: 'User not found.' });
+
+  const todo = user.todos.find(todo => todo.id === id)
+
+  if (!validate(id))
     return response.status(400).json({ error: 'The passed todo id is not a valid id.' });
   
   if (!todo)
     return response.status(404).json({ error: 'Todo not found.' });
 
+  request.user = user;
   request.todo = todo;
 
   return next();
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const { id } = request.params;
+  const user = users.find(user => user.id === id);
+
+  if (!user)
+    return response.status(404).json({ error: 'User not found.' });
+    
+  request.user = user;
+
+  return next();
 }
 
 app.post('/users', (request, response) => {
